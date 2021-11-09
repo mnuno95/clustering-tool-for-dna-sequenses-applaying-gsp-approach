@@ -1,0 +1,16 @@
+api:
+  mail: marlon.nunorod@gmail.com
+  key: fa7bd9b537143997def62002bed8ad43ee08
+
+query:
+  max_result: 8
+  organism: human papillomavirus
+  type: [18, 16, 51]
+  regions: [L2]
+  database: nuccore
+  initDate: 2000/01/01
+
+flow:
+  mapping: VOSS
+  clustering: BIRCH
+  characterizing: FFT
