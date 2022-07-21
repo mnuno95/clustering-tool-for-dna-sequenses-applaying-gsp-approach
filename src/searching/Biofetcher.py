@@ -16,6 +16,9 @@ class Biofetcher:
     organism = ''
     organismIdResultList = []
     listOfCells = []
+    randIndexList = []
+    philogenticList = []
+    regionSize = 0
 
     '''
         this function gets the query configuration from the yaml file 
@@ -33,15 +36,14 @@ class Biofetcher:
         self.queryPubDateEnd = datetime.today().strftime('%Y/%m/%d')
         self.organism = self.yaml_content['query']['organism']
 
-
     '''
         this function looks for the organism id that the user requires from NCBI data base
     '''
     def findOrganismIds(self):
 
-        organismTypes = self.yaml_content['query']['type']
+        self.organismTypes = self.yaml_content['query']['type']
 
-        for type in organismTypes:
+        for type in self.organismTypes:
             self.getOrganismListFromNCBIDataBase(type)
 
 
@@ -52,7 +54,7 @@ class Biofetcher:
 
         ncbiQueryPath = f'({self.organism} type {type} [Organism]) AND genome[All Fields] AND("{self.queryPubDateStart}"[Publication Date]: "{self.queryPubDateEnd}"[Publication Date])'
 
-        apiCall = Entrez.esearch(db=self.ncbiDatabaseQuery, term=ncbiQueryPath, retmax=self.queryMaxResult, idtype="acc", sort="relevance")
+        apiCall = Entrez.esearch(db=self.ncbiDatabaseQuery, term=ncbiQueryPath, retmax=(self.queryMaxResult * 3), idtype="acc", sort="relevance")
         response = Entrez.read(apiCall)
 
         self.organismIdResultList.append(response['IdList'])
@@ -62,43 +64,36 @@ class Biofetcher:
     '''
     def getOrganismFromNCBIDataBase(self):
 
-        genomicRegions = {}
         organismTypes = self.yaml_content['query']['type']
-
-        for region in self.yaml_content['query']['regions']:
-            genomicRegions[region] = []
-
 
         index = 0
         for organismIdList in self.organismIdResultList:
 
-            cell = OrganismnCell(organismTypes[index], copy.deepcopy(genomicRegions))
-
             for organismId in organismIdList:
+                cell = OrganismnCell(organismTypes[index])
                 self.getEntrezObject(organismId, cell)
-
-            self.listOfCells.append(cell)
-            index = index + 1
-
+                self.listOfCells.append(cell)
+            index+=1
 
 
     def getEntrezObject(self, organismId, cell):
 
+        self.regionsSet = set(self.yaml_content['query']['regions'])
         with Entrez.efetch(db=self.ncbiDatabaseQuery, rettype="gb", retmode="text", id=organismId) as handle:
             seq_record = SeqIO.read(handle, "gb")
 
+            dnaResult = ''
             for feature in seq_record.features:
                 if feature.type == "CDS":
-
                     if 'gene' in feature.qualifiers:
-
                         genomicRegion = str(feature.qualifiers["gene"][0])
 
-                        if genomicRegion in self.yaml_content['query']['regions']:
+                        if genomicRegion in self.regionsSet:
                             dnaRegion = feature.location.extract(seq_record).seq
+                            dnaResult += str(dnaRegion)
+                            cell.pushRegionOrder(genomicRegion)
 
-                            cell.genomicRegions[genomicRegion].append(str(dnaRegion))
-
+            cell.setDna(dnaResult)
 
     def __init__(self):
         self.getSettings()

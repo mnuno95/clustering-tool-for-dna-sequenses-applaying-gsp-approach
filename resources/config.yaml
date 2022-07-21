@@ -3,9 +3,10 @@ api:
   key: fa7bd9b537143997def62002bed8ad43ee08
 
 query:
-  max_result: 8
+  max_result: 1
+  max_search: 3
   organism: human papillomavirus
-  type: [18, 16, 51]
+  type: [67, 58, 33, 52, 31, 35, 16, 18, 45, 39, 70, 68, 59, 69, 26, 51, 30, 53, 56, 66]
   regions: [L2]
   database: nuccore
   initDate: 2000/01/01
@@ -14,3 +15,17 @@ flow:
   mapping: VOSS
   clustering: BIRCH
   characterizing: FFT
+
+BIRCH:
+  n_clusters: 3
+  branching_factor: 50
+  threshold: 0.5
+  compute_labels: True
+
+# 67, 58, 33, 52, 31, 35, 16, 18, 45, 39, 70, 68, 59, 69, 26, 51, 30, 53, 56, 66
+# 18, 16, 51
+# 18 39 45
+# 58 33 31
+# 53 30 56
+
+#DBSCAN

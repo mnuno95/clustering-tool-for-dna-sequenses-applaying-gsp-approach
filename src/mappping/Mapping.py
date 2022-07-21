@@ -1,3 +1,5 @@
+from .Bioutils import vphPhilogenticTree
+
 import threading
 import yaml
 
@@ -37,11 +39,34 @@ class Mapping:
         dnaSequences = []
         yaml_file = open('../resources/config.yaml')
         yaml_content = yaml.safe_load(yaml_file)
-        region = yaml_content['query']['regions'][0]
+        maxResult = yaml_content['query']['max_result']
+        regions = yaml_content['query']['regions']
+        regionsSize = len(regions)
+        self.philogeneticType = []
+        self.randIndexList = []
+        dict = {}
 
         for cell in sequences:
-            for dna in cell.genomicRegions[region]:
-                dnaSequences.append(dna)
+
+            if(len(cell.insertionRegionOrder) == regionsSize):
+
+                if(cell.type in dict):
+                    count = dict[cell.type]
+                    if count != maxResult:
+                        dict[cell.type] = count + 1
+                        self.philogeneticType.append(vphPhilogenticTree[cell.type])
+                        self.randIndexList.append(str(cell.type) + '.' + str(count+1))
+                        dnaSequences.append(cell.dna)
+                else:
+                    dict[cell.type] = 1
+                    self.philogeneticType.append(vphPhilogenticTree[cell.type])
+                    dnaSequences.append(cell.dna)
+                    self.randIndexList.append(str(cell.type) + '.' + str(0))
+
+        print(len(dnaSequences))
+        print(self.randIndexList)
+        print(self.philogeneticType)
+        print()
 
         self.transform(dnaSequences)
 
